@@ -2,7 +2,7 @@
 from urllib import request
 from dynaconf import Dynaconf
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 class EventDataBuilder(object):
@@ -25,6 +25,9 @@ class EventDataBuilder(object):
         data_dict['TOKEN'] = plain_hash
         data_dict['id_hash'] = vid_hash
         data_dict['transaction_limit'] = 5
+        timestamp_now = datetime.utcnow() + timedelta(days=180)
+        exp_ts_str = timestamp_now.strftime(self.seeder_config.datashare.timestamp_format) + timestamp_now.strftime('.%f')[0:4] + 'Z'
+        data_dict['expiry_timestamp'] = exp_ts_str
         data_dict['proof'] = proof_dict
 
         event_data_dict = {}
