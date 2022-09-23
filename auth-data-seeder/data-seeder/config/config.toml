@@ -5,6 +5,8 @@ host_url='https://api-internal.dev1.mosip.net'
 hub_url='https://api-internal.dev1.mosip.net/hub/'
 publish_url='https://api-internal.dev1.mosip.net/hub/'
 client_secret='Test'
+publisher='CREDENTIAL_SERVICE'
+topic='mpartner-default-auth/CREDENTIAL_ISSUED'
 
 [input]
 file_path='/opt/taheer-mos/mosip/ida-data-seeder/auth-data-seeder/data-seeder/sample/test-import.csv'
@@ -27,6 +29,8 @@ user_secret='oR3Qyr9vIfLS8dq8'
 
 [ida]
 public_key='/home/mahammedtaheer/Desktop/keys/local-ida/cred-serv.cer'
+websub_secret='rIy7sOVeG34jVlO9'
+cred_service_url='http://localhost:8093/idauthentication/v1/internal/callback/idchange/credential_issued/'
 
 [datashare]
 create_url='https://api-internal.dev1.mosip.net/v1/datashare/create'
@@ -37,3 +41,6 @@ schema_name='MOSIPVerifiableCredential'
 format_issuer='https://mosip.io/issuers/'
 issuer='mpartner-default-auth'
 timestamp_format='%Y-%m-%dT%H:%M:%S'
+sign_p12_file='/home/mahammedtaheer/Desktop/keys/local-test-partner/partner.p12'
+p12_pwd='12345'
+

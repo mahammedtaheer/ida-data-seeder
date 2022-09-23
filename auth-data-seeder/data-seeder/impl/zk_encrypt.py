@@ -11,6 +11,8 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, asymmetric, ciphers
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.x509 import Certificate
+from PyByteBuffer import ByteBuffer
+import json
 
 class ZKEncryptor(object):
 
@@ -48,7 +50,7 @@ class ZKEncryptor(object):
         enc_values['zone'] = self._encrypt_data(derived_key, self._get_str(input_data.zone), rand_index)
         
         enc_random_key = self._enc_random_key(random_key)
-        return enc_values, enc_random_key
+        return enc_values, enc_random_key, rand_index
         
 
     def _get_derived_key(self, id: str, random_key: str) -> bytes:
@@ -70,20 +72,29 @@ class ZKEncryptor(object):
         aes_encryptor_obj.authenticate_additional_data(aad)
         enc_data = aes_encryptor_obj.update(data_to_enc_bytes) + aes_encryptor_obj.finalize()
         enc_data_tag = enc_data + aes_encryptor_obj.tag
-        enc_data_concat = bytes(str(rand_index), 'utf-8') + nonce + aad + enc_data_tag
+        byteBuff = ByteBuffer.allocate(4)
+        byteBuff.put(rand_index)
+        byteBuff.strip()
+        filled_buff = byteBuff.buffer
+        byteBuff_1 = ByteBuffer.allocate(4)
+        byteBuff_1.put(rand_index)
+        remaining_buff = byteBuff_1.array()
+
+        index_bytes = remaining_buff + filled_buff
+        enc_data_concat =  index_bytes + nonce + aad + enc_data_tag
         return base64.urlsafe_b64encode(enc_data_concat).decode('utf-8')
 
 
     def _get_str(self, data_to_enc: list) -> List:
         ret_value = []
         for data in data_to_enc:
-            ret_value.append(str(data.dict()))
+            ret_value.append(data.dict())
         
-        return str(ret_value)
+        return json.dumps(ret_value)
 
     def _enc_random_key(self, random_key:str ) -> str:
         pub_key_obj = self.cert_obj.public_key()
-        return pub_key_obj.encrypt(base64.b64decode(random_key), self.asymmetric_encrypt_padding)
+        return base64.urlsafe_b64encode(self.cert_obj.fingerprint(hashes.SHA256()) + pub_key_obj.encrypt(base64.b64decode(random_key), self.asymmetric_encrypt_padding)).decode('utf-8')
 
     def _get_cert_obj(cert_path: str) -> Certificate:
         with open(cert_path, 'rb') as file:

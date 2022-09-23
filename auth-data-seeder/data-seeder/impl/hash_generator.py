@@ -22,7 +22,7 @@ class IdHashGenerator(object):
         sha256_hash_obj = hashes.Hash(hashes.SHA256())
         sha256_hash_obj.update(bytes(input_id, 'utf-8'))
         sha256_hash_obj.update(bytes(salt_data, 'utf-8'))
-        return sha256_hash_obj.finalize().hex().upper(), decimal_index_value
+        return sha256_hash_obj.finalize().hex().upper(), decimal_index_value, salt_data
 
 
     def generate_id_plain_hash(self, input_id: str) -> str:
