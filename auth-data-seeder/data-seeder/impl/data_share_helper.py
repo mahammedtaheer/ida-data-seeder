@@ -55,7 +55,10 @@ class DataShareHelper(object):
             resp_json = json.loads(resp.text) 
             print ('Uploading Data to datashare successful. Response Data: ' + str(resp_json))
             internal_url = resp_json['dataShare']['url']
-            external_url = internal_url.replace('http://datashare.datashare', self.seeder_config.mosip_env.host_url)
-            return external_url
+            if self.seeder_config.datashare.replace_external_url is True:
+                external_url = internal_url.replace('http://datashare.datashare', self.seeder_config.mosip_env.host_url)
+                return external_url
+                
+            return internal_url
         
         raise Exception('Error Uploading credential to DataShare. Response Code:' + resp.status_code)

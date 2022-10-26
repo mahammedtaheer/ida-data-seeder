@@ -6,8 +6,9 @@ import base64
 
 class RandomGenerator(object):
     
-    def __init__(self, file_path: str, max_index_number: int, bytes_size: int):
+    def __init__(self, file_path: str, start_index_number: int, max_index_number: int, bytes_size: int):
         self.store_file_path = file_path
+        self.start_index_number = start_index_number
         self.max_index_number = max_index_number
         self.bytes_size = bytes_size
 
@@ -19,7 +20,7 @@ class RandomGenerator(object):
 
         print ('Generating Random bytes for max index: ' + str(self.max_index_number))
         data_dict = {}
-        for i in range(1, self.max_index_number):
+        for i in range(self.start_index_number, self.max_index_number):
             data_dict[i] = self._generator_random_bytes()
 
         self._store_data(data_dict)

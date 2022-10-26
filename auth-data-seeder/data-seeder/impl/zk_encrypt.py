@@ -29,7 +29,8 @@ class ZKEncryptor(object):
 
     def zk_encrypt(self, input_data: DemographicsModel) -> dict:
 
-        rand_index = random.randint(1, self.seeder_config.random_generator.zk_keys_max_index)
+        rand_index = random.randint(self.seeder_config.random_generator.zk_keys_start_index, 
+                        self.seeder_config.random_generator.zk_keys_max_index)
         random_key = self.crypto_data_provider.get_zk_key(str(rand_index))
         id = input_data.id
         derived_key = self._get_derived_key(id, random_key)
@@ -48,6 +49,31 @@ class ZKEncryptor(object):
         enc_values['province'] = self._encrypt_data(derived_key, self._get_str(input_data.province), rand_index)
         enc_values['region'] = self._encrypt_data(derived_key, self._get_str(input_data.region), rand_index)
         enc_values['zone'] = self._encrypt_data(derived_key, self._get_str(input_data.zone), rand_index)
+        
+        enc_random_key = self._enc_random_key(random_key)
+        return enc_values, enc_random_key, rand_index
+
+    def zk_encrypt_dyn_data(self, input_data: object) -> dict:
+
+        rand_index = random.randint(self.seeder_config.random_generator.zk_keys_start_index, 
+                        self.seeder_config.random_generator.zk_keys_max_index)
+        random_key = self.crypto_data_provider.get_zk_key(str(rand_index))
+        id = input_data.__fields__['id'].default
+        derived_key = self._get_derived_key(id, random_key)
+
+        enc_values = {}
+
+        for field_key in input_data.__fields__.keys(): 
+            if field_key == 'id':
+                continue
+            
+            field_value, is_json = ZKEncryptor._get_json_obj(input_data.__fields__[field_key].default)
+            if is_json:
+                field_json_value = self._get_str(field_value)
+                enc_values[field_key] = self._encrypt_data(derived_key, field_json_value, rand_index)
+                continue
+
+            enc_values[field_key] = self._encrypt_data(derived_key, field_value, rand_index)
         
         enc_random_key = self._enc_random_key(random_key)
         return enc_values, enc_random_key, rand_index
@@ -84,11 +110,24 @@ class ZKEncryptor(object):
         enc_data_concat =  index_bytes + nonce + aad + enc_data_tag
         return base64.urlsafe_b64encode(enc_data_concat).decode('utf-8')
 
+    @staticmethod
+    def _get_json_obj(field_value: str):
+        if not field_value or len(field_value.strip()) == 0:
+            return list()
+        try:
+            if field_value.isdigit():
+                return field_value, False
+
+            return json.loads(field_value), True
+        except:
+            return field_value, False
+
 
     def _get_str(self, data_to_enc: list) -> List:
         ret_value = []
         for data in data_to_enc:
-            ret_value.append(data.dict())
+            #ret_value.append(data.dict())
+            ret_value.append(data)
         
         return json.dumps(ret_value)
 

@@ -27,10 +27,10 @@ if __name__ == "__main__":
     crypto_data_provider = CryptoDataProvider(ida_seeder_config)
 
     print ('Creating Id Hash Generator Object.')
-    id_hash_gen = IdHashGenerator(crypto_data_provider)
+    id_hash_gen = IdHashGenerator(crypto_data_provider, ida_seeder_config)
 
     seed_data_reader = SeedDataReader(ida_seeder_config)
-    input_data_list = seed_data_reader.read_and_parse_data()
+    input_data_list = seed_data_reader.read_and_parse_dyn_data()
     print ('Total Number of Records found: ' + str(len(input_data_list)))
 
     zk_encrypt = ZKEncryptor(crypto_data_provider, ida_seeder_config, id_hash_gen)
@@ -39,16 +39,17 @@ if __name__ == "__main__":
     event_data_builder = EventDataBuilder(ida_seeder_config)
     event_data_uploader = EventDataUploader(ida_seeder_config)
     for input_data in input_data_list:
-        id = input_data.id
+        #id = input_data.id
+        id = input_data.__fields__['id'].default
         vid_hash, salt_index, salt_data = id_hash_gen.generate_id_hash(id)
         plain_hash = id_hash_gen.generate_id_plain_hash(id)
-        enc_data, enc_key, rand_index = zk_encrypt.zk_encrypt(input_data)
+        enc_data, enc_key, rand_index = zk_encrypt.zk_encrypt_dyn_data(input_data)
         data_share_url = ds_helpher.create_ds_request(enc_data)
         signed_data = signature_helpher.sign_data(str(enc_data))
         event_data = event_data_builder.build_event_data(enc_key, rand_index, signed_data, data_share_url, 
                                     vid_hash, salt_index, salt_data, plain_hash)
         event_data_uploader.post_event_data(event_data)
-        print ('Data importing into IDA completed for ID: ' + str(id))
+        print ('Data importing into IDA completed for ID: ' + str(id) + ', VID Hash: ' + str(vid_hash))
 
 
 
